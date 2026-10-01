@@ -10,7 +10,7 @@
 # Usage:        make            - Builds development build (debug)
 #               make release=1  - Builds optimized production version
 #               make clean      - Removes compiled artifacts and other products
-#               make flash      - Flashes the product to AVR flash memory
+#               make flash      - Flashes the product (.hex) to AVR flash memory
 #               make test       - Runs test cases to verify your code changes
 # ==============================================================================
 
@@ -29,12 +29,12 @@
 #    avrdude -v
 # ------------------------------------------------------------------------------
 # Linux
-# 1. Install needed libraries
+# 1. Install needed libraries and tools
 #    sudo apt update
 #    sudo apt install gcc-avr avr-libc avrdude
 # ------------------------------------------------------------------------------
 # MacOS
-# 1. Install needed libraries
+# 1. Install needed libraries and tools
 #    brew tap osx-cross/avr
 #    brew install avr-gcc avrdude
 # ==============================================================================
