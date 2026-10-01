@@ -10,7 +10,7 @@ Powefull, non-blocking bare-metal C-implementation for ATmega328P-MCU (16 MHz). 
 * **Modular C-architecture:** `static inline` -utility functions for EEPROM-memory and `extern "C"` -compatibility for compiler.
 * **Automatic testing:** Python script included for automatic testing and calibrartion.
 
-## 🛠️ Laitteisto ja vaatimukset
+## 🛠️ Hardware requirements and tools
 
 * **MCU:** ATmega328P (e.g. Arduino Uno / Nano)
 * **Clock frequency:** 16 MHz
