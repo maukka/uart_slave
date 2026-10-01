@@ -157,7 +157,7 @@ endif
 # Dependency Tracking & Phony Targets
 # ------------------------------------------------------------------------------
 # Generate .d files automatically alongside .o files
-CPPFLAGS += -MMD -MP
+CPPFLAGS := -MMD -MP
 CFLAGS   += $(CPPFLAGS)
 
 # Map object files to dependency files
@@ -243,6 +243,8 @@ else
 	@rm -rf debug build
 endif
 
+PYTHON   ?= python3
+
 test:
 	@echo "[TEST] Running test suite..."
-	@python test/test.py
+	@$(PYTHON) test/test.py
