@@ -1,0 +1,6 @@
+.venv
+.vscode
+debug
+build
+*.o
+*.d
