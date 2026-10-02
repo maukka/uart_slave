@@ -23,6 +23,7 @@ void usart_init(uint32_t baudrate) {
 
     // Set frame format: 8 data bits, 1 stop bit, no parity (8N1)
     UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
+
 }
 
 void usart_transmit(char data) {
@@ -77,16 +78,24 @@ uint8_t usart_available(void) {
     return (UCSR0A & (1 << RXC0)) ? 1 : 0;
 }
 
-void usart_init_interrupt(uint32_t baudrate) {
-    uint16_t ubrr_value = (uint16_t)((F_CPU / (16UL * baudrate)) - 1);
+void usart_init_slave_interrupt(uint32_t baudrate) {
+
+	// 1. Synkronisessa tilassa UBRR-kaavan kerroin on 2UL (ei 16UL)
+    uint16_t ubrr_value = (uint16_t)((F_CPU / (2UL * baudrate)) - 1);
     UBRR0H = (uint8_t)(ubrr_value >> 8);
     UBRR0L = (uint8_t)(ubrr_value);
 
-    // Switch on RX, TX JA RX-interrrupt -> (RXCIE0) on!
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
-    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
+    // 2. Aseta XCK-pinni (PB5 ATmega328P:ssä) SISÄÄNTULOKSI (Slave-tila)
+    DDRB &= ~(1 << DDB5);
 
-    // Enable global interrupts.
+    // 3. Ota käyttöön RX, TX ja RX-keskeytys (RXCIE0)
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
+
+    // 4. Aseta Synkroninen tila (UMSEL00 = 1, UMSEL01 = 0) ja 8 databittiä
+    UCSR0C &= ~(1 << UMSEL01);
+    UCSR0C |=  (1 << UMSEL00) | (1 << UCSZ01) | (1 << UCSZ00);
+
+    // 5. Salli globaalit keskeytykset
     sei();
 }
 
@@ -104,7 +113,7 @@ ISR(USART_RX_vect) {
 }
 
 // Luetaan yksi tavu rengaspuskurista (ei lukitse suoritusta)
-int16_t usart_read_byte_intrerrupt(void) {
+int16_t usart_read_byte_interrupt(void) {
     if (rx_head == rx_tail) {
         return -1; // Puskuri tyhjä
     }

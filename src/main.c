@@ -11,68 +11,85 @@
 #include "../include/temp_sensor.h"
 #include "../include/local_utils.h"
 
+int process_command(const char *cmd, char *response, size_t response_size) {
+	if (strcmp(cmd, "TEMP0") == 0) {
+		uint16_t result = read_temp_celsius();
+		snprintf(response, response_size, "Temperature in board arduino %d C\r\n", result);
+		usart_print(response);
+		return 1;
+	} 
+	else if (strcmp(cmd, "LED_ON") == 0) {
+		PORTB |= (1 << PB5);
+		snprintf(response, response_size, "RESPONSE: OK (LED ON)\r\n");
+		usart_print(response);
+		return 1;
+	} 
+	else if (strcmp(cmd, "LED_OFF") == 0) {
+		PORTB &= ~(1 << PB5);
+		snprintf(response, response_size, "RESPONSE: OK (LED OFF)\r\n");
+		usart_print(response);
+		return 1;
+	}
+	else if (strncmp(cmd, "CALIBRATE ", 10) == 0) {
+		int16_t target_temp = (int16_t)atoi(&cmd[10]);
+		if (calibrate_temperature_sensor(target_temp)) {
+			uint16_t new_offset = load_eeprom_word(&eeprom_temperature_offset);
+			snprintf(response, response_size, "RESPONSE: OK (Calibrated to %d C, New Offset: %u)\r\n", 
+					target_temp, new_offset);
+			usart_print(response);
+			return 1;
+		} else {
+			snprintf(response, response_size, "ERROR: Calibration failed (Invalid temp or offset out of bounds)\r\n");
+			usart_print(response);
+			return 0;
+		}
+	} 
+	else {
+		snprintf(response, response_size, "ERROR: Unknown Command ('%s')\r\n", cmd);
+		usart_print(response);
+		return 0;
+	}
+}
+
 int main(void) {
     char cmd_buffer[32];
+	uint8_t cmd_idx = 0;
+    char response_buffer[64];
 
-    // Sisäänrakennettu L-ledi lähtötilaksi
-    DDRB |= (1 << PB5);
+	DDRB |= (1 << DDB5);
 
-    // Alustetaan USART 115200 baud
+#if USE_SLAVE_MODE
+    usart_init_slave_interrupt(115200);
+#else
     usart_init(115200);
+#endif
 	init_temperature_sensor();
 
     // Lähetetään käynnistysviesti sarjaporttiin
     usart_print("SYSTEM: READY\r\n");
 
     while (1) {
-        // Luetaan komento VAIN jos sarjaportissa on dataa odottamassa (ei lukitse suoritusta)
-        if (usart_available()) {
-            
-            // Luetaan koko merkkijono rivinvaihtoon asti
-            usart_receive_string(cmd_buffer, sizeof(cmd_buffer));
+		// Read byte from RX buffer
+        int16_t b = usart_read_byte_interrupt();
 
-            // Käsitellään komennot
-            if (strcmp(cmd_buffer, "TEMP0") == 0) {
-                // Testivastaus kovakoodatulla arvolla sarjaliikenteen varmistamiseksi
-				uint16_t result = read_temp_celsius();
-				char response[64];
-				sprintf(response, "Temperature in board arduino %d C\r\n", result);
-                usart_print(response);
-				//usart_print("RESPONSE: OK (TEMP0)\r\n");
-            } 
-            else if (strcmp(cmd_buffer, "LED_ON") == 0) {
-                PORTB |= (1 << PB5);
-                usart_print("RESPONSE: OK (LED ON)\r\n");
-            } 
-            else if (strcmp(cmd_buffer, "LED_OFF") == 0) {
-                PORTB &= ~(1 << PB5);
-                usart_print("RESPONSE: OK (LED OFF)\r\n");
-            }
-			// Käsitellään komento "CALIBRATE <lämpötila>"
-			else if (strncmp(cmd_buffer, "CALIBRATE ", 10) == 0) {
-				// Luetaan asteluku tekstin perästä (esim. "CALIBRATE 23")
-				int16_t target_temp = (int16_t)atoi(&cmd_buffer[10]);
+        if (b != -1) {
+            char c = (char)b;
 
-				if (calibrate_temperature_sensor(target_temp)) {
-					char response[64];
-					uint16_t new_offset = load_eeprom_word(&eeprom_temperature_offset);
-					sprintf(response, "RESPONSE: OK (Calibrated to %d C, New Offset: %u)\r\n", 
-							target_temp, new_offset);
-					usart_print(response);
-				} else {
-					usart_print("ERROR: Calibration failed (Invalid temp or offset out of bounds)\r\n");
-				}
-			} 
-            else if (strlen(cmd_buffer) > 0) {
-                // Tulostetaan tuntematon komento diagnosointia varten
-                char err_msg[64];
-                sprintf(err_msg, "ERROR: Unknown Command ('%s')\r\n", cmd_buffer);
-                usart_print(err_msg);
+            // If charater ise linefeed or carriage return we have read the whole command
+            if (c == '\n' || c == '\r') {
+                if (cmd_idx > 0) {
+                    cmd_buffer[cmd_idx] = '\0'; 
+                    
+                    // Call process command which will handle the command and send response
+                    process_command(cmd_buffer, response_buffer, sizeof(response_buffer));
+                    
+                    cmd_idx = 0;
+                }
+            } 
+            // Not an linefeed of carriage return, so we can add it to command buffer if there is space
+            else if (cmd_idx < (sizeof(cmd_buffer) - 1)) {
+                cmd_buffer[cmd_idx++] = c;
             }
         }
-
-        // Ledi vilkkuu ilmaisten että main-silmukka pyörii
-        //PORTB ^= (1 << PB5);
-        //_delay_ms(100); 
     }
 }

@@ -2,9 +2,12 @@
 #define USART_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // Initializes USART-bus to given baudrate (Uses F_CPU-constant)
 void usart_init(uint32_t baudrate);
+
+void usart_init_slave_interrupt(uint32_t baudrate);
 
 // Sends one char over USART
 void usart_transmit(char data);
@@ -12,7 +15,7 @@ void usart_transmit(char data);
 // Waits one char and reads it from data register
 char usart_receive(void);
 uint8_t usart_receive_string(char *buffer, uint8_t max_length);
-int16_t usart_read_byte_intrerrupt(void);
+int16_t usart_read_byte_interrupt(void);
 // Sends char array (ends to null-char '\0')
 void usart_print(const char *str);
 

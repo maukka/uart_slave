@@ -126,6 +126,8 @@ AVRDUDE := avrdude
 CFLAGS       += -mmcu=$(MCU)
 CFLAGS       += -DF_CPU=$(F_CPU)
 CFLAGS       += -Wall -Wextra  # Warnings on
+CFLAGS       += -DUSE_SLAVE_MODE=0 # Define USE_SLAVE_MODE to 1 to enable slave 
+								   # mode in USART initialization
 
 # ------------------------------------------------------------------------------
 # Linker flags for AVR chip
