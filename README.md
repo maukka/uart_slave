@@ -1,6 +1,7 @@
 # ATmega328P Temperature Sensor & Calibration Controller
 
-Powefull, non-blocking bare-metal C-implementation for ATmega328P-MCU (16 MHz). Project uses buildin temperature sensor on channel ADC8, filters noice by averanging temperature samples, controls calibrated values in  EEPROM-memory and offers two-way serial communication channel (115200 baud) to control the board.
+Powefull, non-blocking bare-metal C-implementation for ATmega328P-MCU (16 MHz). Project uses buildin temperature sensor on channel ADC8, filters noice by averanging temperature samples, controls calibrated values in  EEPROM-memory and offers two-way serial communication channel (115200 baud) to control the board. Supports also slave mode by setting -DUSE_SLAVE_MODE=1 in Makefile. In slave
+mode you can safely connect ATMega328P to another chip (acting as master in USART communication) for exchanging data between chips.
 
 ## 🚀 Features
 
@@ -9,6 +10,7 @@ Powefull, non-blocking bare-metal C-implementation for ATmega328P-MCU (16 MHz). 
 * **High performance USART:** Buffered serial transmitting 115200 baud -speed without delays (`_delay_ms`). Using pins PD5 (TX) and PD4 (RX).
 * **Modular C-architecture:** `static inline` -utility functions for EEPROM memory and `extern "C"` -compatibility for compiler.
 * **Automatic testing:** Python script included for automatic testing and calibrartion.
+* **Slave mode:** Supports synchronous slave mode by setting -DUSE_SLAVE_MODE=1 in Makefile.
 
 ## 🛠️ Hardware requirements and tools
 
