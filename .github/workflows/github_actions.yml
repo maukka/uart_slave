@@ -24,7 +24,7 @@ jobs:
         run: |
           make clean
           make all
-          make test
+          # @todo Enable when this uses own github runner #make test
       - name: Build release version of the project
         run: |
           make clean
