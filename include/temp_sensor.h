@@ -1,6 +1,7 @@
 #ifndef TEMP_SENSOR_H
 #define TEMP_SENSOR_H
 #include <stdint.h>
+#include <stdbool.h>
 #include <avr/eeprom.h>
 
 // Julistetaan EEPROM-muuttuja extern-määreellä muille tiedostoille
